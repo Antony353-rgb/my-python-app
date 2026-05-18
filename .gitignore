@@ -14,9 +14,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Database Files
-*.db
-database/*.db
 
 # Session & Media Uploads
 flask_session/
