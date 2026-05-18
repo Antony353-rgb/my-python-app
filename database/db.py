@@ -11,7 +11,14 @@ def get_db():
         tmp_db = "/tmp/vercel_demo.db"
         if not os.path.exists(tmp_db):
             actual_db_path = os.path.abspath(db_path)
-            shutil.copy2(actual_db_path, tmp_db)
+            if os.path.exists(actual_db_path):
+                shutil.copy2(actual_db_path, tmp_db)
+            else:
+                # Create a 0-byte file first to prevent recursion during init_db and seed
+                open(tmp_db, "w").close()
+                init_db()
+                from database.seed_data import seed
+                seed()
         conn = sqlite3.connect(tmp_db)
     else:
         os.makedirs(os.path.dirname(db_path), exist_ok=True)
