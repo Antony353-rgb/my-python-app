@@ -1,0 +1,37 @@
+{% extends "base_client.html" %}
+{% block title %}My Wallet{% endblock %}
+{% block page_title %}My Wallet{% endblock %}
+{% block content %}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  {% for b in balances %}
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 stat-card">
+    <p class="text-gray-500 text-xs font-medium uppercase tracking-wide">{{ b.currency_name }}</p>
+    <p class="text-3xl font-bold mt-1
+      {% if b.balance > 100 %}text-green-600{% elif b.balance > 0 %}text-amber-600{% else %}text-red-600{% endif %}">
+      {{ b.symbol }}{{ "%.2f"|format(b.balance) }}
+    </p>
+    <p class="text-gray-400 text-xs mt-1">{{ b.code }}</p>
+    <a href="{{ url_for('wallet.history', currency_id=b.currency_id) }}"
+       class="text-blue-600 text-xs hover:underline mt-2 inline-block">
+      View History &rarr;
+    </a>
+  </div>
+  {% else %}
+  <div class="col-span-4 bg-gray-50 rounded-xl p-8 text-center text-gray-400">
+    No wallet currencies configured.
+  </div>
+  {% endfor %}
+</div>
+
+<div class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+  <i class="fa fa-circle-info text-blue-500 mt-0.5"></i>
+  <div>
+    <p class="text-blue-800 text-sm font-medium">How to top up?</p>
+    <p class="text-blue-600 text-sm mt-0.5">Contact your account manager. Funds are added after payment confirmation. You will be notified by email.</p>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/shared/utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/client/wallet.js') }}"></script>
+{% endblock %}

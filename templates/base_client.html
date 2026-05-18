@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Client Portal{% endblock %} — VoucherPlatform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<div class="flex min-h-screen">
+  <!-- Sidebar -->
+  <aside class="w-60 bg-white border-r border-gray-200 min-h-screen fixed top-0 left-0 z-30 flex flex-col">
+    <div class="px-5 py-5 border-b border-gray-100">
+      <h1 class="font-bold text-blue-700 text-lg">🎟 VoucherPlatform</h1>
+      <p class="text-gray-400 text-xs mt-0.5">Client Portal</p>
+    </div>
+    <nav class="flex-1 px-3 py-4 space-y-0.5">
+      <a href="{{ url_for('client.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all {% if request.endpoint=='client.dashboard' %}bg-blue-50 text-blue-700{% endif %}">
+        <i class="fa fa-gauge w-4 text-center"></i> Dashboard
+      </a>
+      <a href="{{ url_for('client.search') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all {% if 'search' in request.endpoint %}bg-blue-50 text-blue-700{% endif %}">
+        <i class="fa fa-magnifying-glass w-4 text-center"></i> Search Vouchers
+      </a>
+      <a href="{{ url_for('client.cart') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all {% if request.endpoint=='client.cart' %}bg-blue-50 text-blue-700{% endif %}">
+        <i class="fa fa-cart-shopping w-4 text-center"></i> Cart
+        {% set cart_count = session.cart|length if session.cart else 0 %}
+        {% if cart_count > 0 %}<span class="ml-auto bg-blue-600 text-white text-xs rounded-full px-2 py-0.5">{{ cart_count }}</span>{% endif %}
+      </a>
+      <a href="{{ url_for('client_orders.orders_list') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all {% if 'orders' in request.endpoint %}bg-blue-50 text-blue-700{% endif %}">
+        <i class="fa fa-receipt w-4 text-center"></i> My Orders
+      </a>
+      <a href="{{ url_for('wallet.wallet') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all {% if 'wallet' in request.endpoint %}bg-blue-50 text-blue-700{% endif %}">
+        <i class="fa fa-wallet w-4 text-center"></i> My Wallet
+      </a>
+      <a href="{{ url_for('client.catalogue_download') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all">
+        <i class="fa fa-file-excel w-4 text-center"></i> Price List
+      </a>
+      <a href="{{ url_for('client.notifications') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all">
+        <i class="fa fa-bell w-4 text-center"></i> Notifications
+        {% if unread_notifications > 0 %}<span class="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-0.5">{{ unread_notifications }}</span>{% endif %}
+      </a>
+    </nav>
+    <div class="px-4 py-4 border-t border-gray-100">
+      <p class="text-gray-700 text-sm font-medium truncate">{{ session.user_name }}</p>
+      <a href="{{ url_for('auth.logout') }}" class="text-gray-400 hover:text-red-500 text-xs flex items-center gap-1 mt-1 transition-colors">
+        <i class="fa fa-arrow-right-from-bracket"></i> Logout
+      </a>
+    </div>
+  </aside>
+  <div class="ml-60 flex-1 flex flex-col">
+    <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-20">
+      <h2 class="font-semibold text-gray-700">{% block page_title %}{% endblock %}</h2>
+      <a href="{{ url_for('auth.change_password') }}" class="text-gray-400 hover:text-blue-600 text-sm transition-colors">
+        <i class="fa fa-key"></i> Change Password
+      </a>
+    </header>
+    <div class="px-6 pt-4">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="mb-3 px-4 py-3 rounded-lg text-sm font-medium
+            {% if category=='success' %}bg-green-50 text-green-700 border border-green-200
+            {% elif category=='danger' %}bg-red-50 text-red-700 border border-red-200
+            {% elif category=='warning' %}bg-amber-50 text-amber-700 border border-amber-200
+            {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endwith %}
+    </div>
+    <main class="flex-1 px-6 py-4">{% block content %}{% endblock %}</main>
+  </div>
+</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,106 @@
+{% extends "base_admin.html" %}
+{% block title %}Catalogue Management{% endblock %}
+{% block page_title %}Catalogue Management{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <p class="text-gray-500 text-sm">Create supplier catalogues and map them to clients with custom pricing.</p>
+  <button onclick="document.getElementById('modal').classList.remove('hidden')"
+          class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+    <i class="fa fa-plus"></i> New Catalogue
+  </button>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+  {% for cat in catalogues %}
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 hover:shadow-md transition-shadow">
+    <div class="flex items-start justify-between mb-3">
+      <div>
+        <h3 class="font-semibold text-gray-800">{{ cat.name }}</h3>
+        <p class="text-gray-500 text-xs mt-0.5">{{ cat.supplier_name }}</p>
+      </div>
+      <span class="px-2 py-0.5 rounded-full text-xs font-medium
+        {% if cat.catalogue_type=='offer' %}bg-purple-100 text-purple-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+        {{ cat.catalogue_type|title }}
+      </span>
+    </div>
+    <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
+      <span><i class="fa fa-box mr-1 text-gray-400"></i>{{ cat.product_count }} products</span>
+      <span class="px-2 py-0.5 rounded-full text-xs {% if cat.is_active %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-500{% endif %}">
+        {{ "Active" if cat.is_active else "Disabled" }}
+      </span>
+    </div>
+    <div class="flex gap-2">
+      <a href="{{ url_for('catalogue.catalogue_detail', cat_id=cat.id) }}"
+         class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2 rounded-lg text-center transition-colors">
+        Manage Products
+      </a>
+      <button onclick="editCat('{{ cat.id }}','{{ cat.name }}','{{ cat.supplier_id }}','{{ cat.catalogue_type }}')"
+              class="px-3 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 text-xs transition-colors">
+        <i class="fa fa-pen"></i>
+      </button>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-span-3 bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center">
+    <i class="fa fa-list text-4xl text-gray-300 mb-3"></i>
+    <p class="text-gray-500 font-medium">No catalogues yet</p>
+    <p class="text-gray-400 text-sm mt-1">Create a catalogue to start mapping products and pricing for clients.</p>
+    <button onclick="document.getElementById('modal').classList.remove('hidden')"
+            class="mt-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
+      Create First Catalogue
+    </button>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Add/Edit Modal -->
+<div id="modal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+    <h3 id="modal-title" class="text-lg font-semibold text-gray-800 mb-4">New Catalogue</h3>
+    <form method="POST" action="{{ url_for('catalogue.catalogue_save') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      <input type="hidden" name="id" id="edit-id"/>
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Catalogue Name *</label>
+        <input type="text" name="name" id="edit-name" required placeholder="e.g. Amazon Standard Rates"
+               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Supplier *</label>
+        <select name="supplier_id" id="edit-supplier" required
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+          <option value="">Select Supplier</option>
+          {% for s in suppliers %}
+          <option value="{{ s.id }}">{{ s.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-5">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+        <select name="catalogue_type" id="edit-type"
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+          <option value="standard">Standard (Regular Rates)</option>
+          <option value="offer">Offer (Special Deals)</option>
+        </select>
+      </div>
+      <div class="flex gap-3">
+        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm">Save</button>
+        <button type="button" onclick="document.getElementById('modal').classList.add('hidden')"
+                class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-lg text-sm">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function editCat(id, name, supplierId, type) {
+  document.getElementById('edit-id').value = id;
+  document.getElementById('edit-name').value = name;
+  document.getElementById('edit-supplier').value = supplierId;
+  document.getElementById('edit-type').value = type;
+  document.getElementById('modal-title').textContent = 'Edit Catalogue';
+  document.getElementById('modal').classList.remove('hidden');
+}
+</script>
+{% endblock %}

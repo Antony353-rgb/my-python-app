@@ -1,0 +1,96 @@
+{% extends "base_admin.html" %}
+{% block title %}Funding Report{% endblock %}
+{% block page_title %}Funding Report{% endblock %}
+{% block content %}
+<!-- Filters -->
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-4 p-4">
+  <form method="GET" class="flex flex-wrap gap-3 items-end">
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">Client</label>
+      <select name="client_id" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+        <option value="">All Clients</option>
+        {% for c in clients %}<option value="{{ c.id }}" {% if filters.client_id==c.id|string %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">From</label>
+      <input type="date" name="date_from" value="{{ filters.date_from or '' }}" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">To</label>
+      <input type="date" name="date_to" value="{{ filters.date_to or '' }}" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
+    </div>
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">Filter</button>
+    <a href="{{ url_for('reports.funding') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors">Reset</a>
+    <a href="{{ url_for('reports.funding', client_id=filters.client_id, date_from=filters.date_from, date_to=filters.date_to, export='xlsx') }}"
+       class="ml-auto bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+      <i class="fa fa-file-excel"></i> Export Excel
+    </a>
+  </form>
+</div>
+
+<!-- Summary Cards -->
+{% set topup_total = data | selectattr('txn_type','equalto','topup') | map(attribute='amount') | sum %}
+{% set topdown_total = data | selectattr('txn_type','equalto','topdown') | map(attribute='amount') | sum %}
+{% set order_total = data | selectattr('txn_type','equalto','order_debit') | map(attribute='amount') | sum %}
+<div class="grid grid-cols-3 gap-4 mb-4">
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+    <p class="text-gray-500 text-xs font-medium uppercase tracking-wide">Total Topups</p>
+    <p class="text-2xl font-bold text-green-600 mt-1">{{ "%.2f"|format(topup_total) }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+    <p class="text-gray-500 text-xs font-medium uppercase tracking-wide">Total Topdowns</p>
+    <p class="text-2xl font-bold text-amber-600 mt-1">{{ "%.2f"|format(topdown_total) }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+    <p class="text-gray-500 text-xs font-medium uppercase tracking-wide">Total Orders Debited</p>
+    <p class="text-2xl font-bold text-red-600 mt-1">{{ "%.2f"|format(order_total) }}</p>
+  </div>
+</div>
+
+<!-- Transaction Table -->
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+  <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+    <h3 class="font-semibold text-gray-700 text-sm">Fund Transactions <span class="text-gray-400 font-normal">({{ data|length }} records)</span></h3>
+  </div>
+  <table class="w-full text-sm whitespace-nowrap">
+    <thead><tr class="bg-gray-50 border-b border-gray-200">
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Currency</th>
+      <th class="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
+      <th class="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase">Bal Before</th>
+      <th class="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase">Bal After</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Remarks</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">By</th>
+    </tr></thead>
+    <tbody>
+      {% for r in data %}
+      <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+        <td class="px-5 py-3 text-xs text-gray-500 font-mono">{{ r.created_at[:16] }}</td>
+        <td class="px-5 py-3 font-medium text-gray-800">{{ r.client_name }}</td>
+        <td class="px-5 py-3">
+          <span class="px-2 py-0.5 rounded-full text-xs font-medium
+            {% if r.txn_type in ['topup','swap_in','reversal'] %}bg-green-100 text-green-700
+            {% elif r.txn_type=='order_debit' %}bg-red-100 text-red-700
+            {% else %}bg-amber-100 text-amber-700{% endif %}">
+            {{ r.txn_type|replace('_',' ')|title }}
+          </span>
+        </td>
+        <td class="px-5 py-3 font-mono text-gray-600 text-xs">{{ r.currency_code }}</td>
+        <td class="px-5 py-3 text-right font-bold {% if r.txn_type in ['topup','swap_in','reversal'] %}text-green-600{% else %}text-red-600{% endif %}">
+          {{ "%.2f"|format(r.amount) }}
+        </td>
+        <td class="px-5 py-3 text-right text-gray-500">{{ "%.2f"|format(r.balance_before) }}</td>
+        <td class="px-5 py-3 text-right font-medium text-gray-800">{{ "%.2f"|format(r.balance_after) }}</td>
+        <td class="px-5 py-3 text-gray-500 text-xs max-w-xs truncate">{{ r.remarks or "—" }}</td>
+        <td class="px-5 py-3 text-gray-500 text-xs">{{ r.created_by_name or "System" }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="9" class="px-5 py-10 text-center text-gray-400">No transactions found for the selected filters.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

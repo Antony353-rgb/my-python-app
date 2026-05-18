@@ -1,0 +1,55 @@
+{% extends "base_client.html" %}
+{% block title %}Fund History{% endblock %}
+{% block page_title %}Fund Transaction History{% endblock %}
+{% block content %}
+<div class="flex gap-2 flex-wrap mb-4">
+  <a href="{{ url_for('wallet.history') }}"
+     class="px-4 py-2 rounded-lg text-sm font-medium transition-colors
+       {% if not currency_id %}bg-blue-600 text-white{% else %}bg-white border border-gray-200 text-gray-700 hover:bg-gray-50{% endif %}">
+    All Currencies
+  </a>
+  {% for c in currencies %}
+  <a href="{{ url_for('wallet.history', currency_id=c.id) }}"
+     class="px-4 py-2 rounded-lg text-sm font-medium transition-colors
+       {% if currency_id==c.id|string %}bg-blue-600 text-white{% else %}bg-white border border-gray-200 text-gray-700 hover:bg-gray-50{% endif %}">
+    {{ c.code }}
+  </a>
+  {% endfor %}
+</div>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+  <table class="w-full text-sm whitespace-nowrap">
+    <thead><tr class="bg-gray-50 border-b border-gray-200">
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Currency</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Balance After</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+    </tr></thead>
+    <tbody>
+      {% for t in transactions %}
+      <tr class="txn-row border-b border-gray-50 hover:bg-gray-50" data-type="{{ t.txn_type }}" data-currency="{{ t.currency_code }}">
+        <td class="px-5 py-3 text-xs text-gray-500">{{ t.created_at[:16] }}</td>
+        <td class="px-5 py-3">
+          <span class="px-2 py-0.5 rounded-full text-xs font-medium
+            {% if t.txn_type in ['topup','swap_in','reversal'] %}bg-green-100 text-green-700
+            {% else %}bg-red-100 text-red-700{% endif %}">
+            {{ t.txn_type|replace('_',' ')|title }}
+          </span>
+        </td>
+        <td class="px-5 py-3 font-mono text-gray-600 text-xs">{{ t.currency_code }}</td>
+        <td class="px-5 py-3 font-bold
+          {% if t.txn_type in ['topup','swap_in','reversal'] %}text-green-600{% else %}text-red-600{% endif %}">
+          {% if t.txn_type in ['topup','swap_in','reversal'] %}+{% else %}-{% endif %}{{ "%.2f"|format(t.amount) }}
+        </td>
+        <td class="px-5 py-3 font-medium text-gray-800">{{ "%.2f"|format(t.balance_after) }}</td>
+        <td class="px-5 py-3 text-gray-400 font-mono text-xs">{{ t.reference or '—' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="px-5 py-10 text-center text-gray-400">No transactions found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

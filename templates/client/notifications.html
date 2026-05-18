@@ -1,0 +1,39 @@
+{% extends "base_client.html" %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-3">
+  {% if notifs %}
+  <p class="text-gray-400 text-xs text-right mb-2">All notifications marked as read.</p>
+  {% endif %}
+  {% for n in notifs %}
+  <div class="bg-white rounded-xl border shadow-sm p-4 flex items-start gap-4
+    {% if not n.is_read %}border-blue-200 border-l-4 border-l-blue-500{% else %}border-gray-200{% endif %}">
+    <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0
+      {% if n.type=='order_delivered' %}bg-green-100 text-green-600
+      {% elif n.type=='order_failed' %}bg-red-100 text-red-600
+      {% elif n.type=='funds_updated' %}bg-blue-100 text-blue-600
+      {% elif n.type=='low_balance' %}bg-amber-100 text-amber-600
+      {% else %}bg-gray-100 text-gray-500{% endif %}">
+      <i class="fa text-sm
+        {% if n.type=='order_delivered' %}fa-circle-check
+        {% elif n.type=='order_failed' %}fa-circle-xmark
+        {% elif n.type=='funds_updated' %}fa-wallet
+        {% elif n.type=='low_balance' %}fa-triangle-exclamation
+        {% else %}fa-bell{% endif %}"></i>
+    </div>
+    <div class="flex-1 min-w-0">
+      <p class="font-medium text-gray-800 text-sm">{{ n.title }}</p>
+      <p class="text-gray-500 text-sm mt-0.5">{{ n.message }}</p>
+      <p class="text-gray-400 text-xs mt-1">{{ n.created_at[:16] }}</p>
+    </div>
+  </div>
+  {% else %}
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-16 text-center">
+    <i class="fa fa-bell-slash text-4xl text-gray-300 mb-3"></i>
+    <p class="text-gray-500 font-medium">No notifications yet</p>
+    <p class="text-gray-400 text-sm mt-1">You will be notified about order updates and fund changes here.</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

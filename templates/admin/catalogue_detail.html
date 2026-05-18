@@ -1,0 +1,215 @@
+{% extends "base_admin.html" %}
+{% block title %}{{ cat.name }}{% endblock %}
+{% block page_title %}Catalogue: {{ cat.name }}{% endblock %}
+{% block content %}
+<!-- Info bar -->
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-4 flex flex-wrap items-center gap-6 text-sm">
+  <div><span class="text-gray-500">Supplier:</span> <span class="font-medium text-gray-800 ml-1">{{ cat.supplier_name }}</span></div>
+  <div><span class="text-gray-500">Type:</span> <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium ml-1">{{ cat.catalogue_type|title }}</span></div>
+  <div><span class="text-gray-500">Products:</span> <span class="font-medium ml-1">{{ products|length }}</span></div>
+  <div class="ml-auto flex gap-2">
+    <a href="{{ url_for('catalogue.download_client_catalogue', client_id=0) }}" class="hidden"></a>
+    <a href="{{ url_for('catalogue.catalogue_list') }}" class="text-blue-600 text-xs hover:underline">← Back to Catalogues</a>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <!-- Products Table -->
+  <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h3 class="font-semibold text-gray-700 text-sm">Catalogue Products</h3>
+      <button onclick="document.getElementById('add-product-modal').classList.remove('hidden')"
+              class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors">
+        <i class="fa fa-plus"></i> Add Product
+      </button>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm whitespace-nowrap">
+        <thead><tr class="bg-gray-50 border-b border-gray-200">
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Brand / Country</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Denomination</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Supplier Rate</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client Rate</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+        </tr></thead>
+        <tbody>
+          {% for p in products %}
+          <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+            <td class="px-4 py-3 font-medium text-gray-800 max-w-[150px] truncate">{{ p.product_name }}</td>
+            <td class="px-4 py-3 text-gray-600 text-xs">{{ p.brand_name }}<br>{{ p.country_name }}</td>
+            <td class="px-4 py-3 text-gray-600">{{ p.denomination_label }} <span class="text-gray-400 text-xs">{{ p.currency_code }}</span></td>
+            <td class="px-4 py-3 text-gray-600 text-xs">
+              {% if p.supplier_rate_type %}
+              {{ p.supplier_rate_value }}{% if 'pct' in (p.supplier_rate_type or '') %}%{% endif %}
+              <span class="text-gray-400">({{ p.supplier_rate_type|replace('_pct','%')|replace('_amt',' amt') }})</span>
+              {% else %}<span class="text-gray-400">—</span>{% endif %}
+            </td>
+            <td class="px-4 py-3 text-gray-600 text-xs">
+              {% if p.client_rate_type %}
+              {{ p.client_rate_value }}{% if 'pct' in (p.client_rate_type or '') %}%{% endif %}
+              <span class="text-gray-400">({{ p.client_rate_type|replace('_pct','%')|replace('_amt',' amt') }})</span>
+              {% else %}<span class="text-gray-400">—</span>{% endif %}
+            </td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded-full text-xs {% if p.is_active %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-500{% endif %}">
+                {{ "Active" if p.is_active else "Off" }}
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <a href="{{ url_for('catalogue.catalogue_product_toggle', cp_id=p.id) }}"
+                 class="text-xs font-medium {% if p.is_active %}text-amber-600 hover:text-amber-800{% else %}text-green-600 hover:text-green-800{% endif %}">
+                {{ "Disable" if p.is_active else "Enable" }}
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="px-5 py-10 text-center text-gray-400">No products in catalogue. Click "Add Product" to start.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Mapped Clients -->
+  <div class="space-y-4">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="font-semibold text-gray-700 text-sm">Mapped Clients</h3>
+        <button onclick="document.getElementById('map-client-modal').classList.remove('hidden')"
+                class="text-blue-600 text-xs hover:underline font-medium">+ Map Client</button>
+      </div>
+      <div class="p-3 space-y-2">
+        {% for c in mapped_clients %}
+        <div class="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg">
+          <span class="text-sm text-gray-700 font-medium">{{ c.name }}</span>
+          <a href="{{ url_for('catalogue.unmap_client', cat_id=cat.id, client_id=c.id) }}"
+             onclick="return confirm('Unmap this client?')"
+             class="text-red-400 hover:text-red-600 text-xs transition-colors">
+            <i class="fa fa-times"></i>
+          </a>
+        </div>
+        {% else %}
+        <p class="text-gray-400 text-sm text-center py-4">No clients mapped yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Download for client -->
+    {% if mapped_clients %}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+      <h3 class="font-semibold text-gray-700 text-sm mb-3">Download Price List</h3>
+      {% for c in mapped_clients %}
+      <a href="{{ url_for('catalogue.download_client_catalogue', client_id=c.id) }}"
+         class="flex items-center gap-2 text-sm text-green-600 hover:text-green-800 py-1 transition-colors">
+        <i class="fa fa-file-excel text-xs"></i> {{ c.name }}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Add Product Modal -->
+<div id="add-product-modal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl p-6 max-h-[90vh] overflow-y-auto">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Add Product to Catalogue</h3>
+    <form method="POST" action="{{ url_for('catalogue.catalogue_add_product', cat_id=cat.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div class="col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Product *</label>
+          <select name="product_id" required
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Select Product</option>
+            {% for p in all_products %}
+            <option value="{{ p.id }}">{{ p.brand_name }} — {{ p.name }} ({{ p.country_name }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Denomination *</label>
+          <select name="denomination_id" required
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Select Denomination</option>
+            {% for d in all_denominations %}
+            <option value="{{ d.id }}">{{ d.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <!-- Supplier Rate -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Supplier Rate Type</label>
+          <select name="sup_rate_type" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">None</option>
+            <option value="discount_pct">Discount %</option>
+            <option value="markup_pct">Markup %</option>
+            <option value="discount_amt">Discount Amount</option>
+            <option value="markup_amt">Markup Amount</option>
+            <option value="fixed">Fixed Price</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Supplier Rate Value</label>
+          <input type="number" name="sup_rate_value" step="0.01" placeholder="e.g. 10"
+                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
+        </div>
+        <!-- Client Rate -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Client Rate Type</label>
+          <select name="client_rate_type" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">None</option>
+            <option value="discount_pct">Discount %</option>
+            <option value="markup_pct">Markup %</option>
+            <option value="discount_amt">Discount Amount</option>
+            <option value="markup_amt">Markup Amount</option>
+            <option value="fixed">Fixed Price</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Client Rate Value</label>
+          <input type="number" name="client_rate_value" step="0.01" placeholder="e.g. 5"
+                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Minimum Markup % <span class="text-gray-400 font-normal">(floor price protection)</span></label>
+          <input type="number" name="min_markup_pct" step="0.01" value="0" placeholder="0"
+                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
+          <p class="text-xs text-gray-400 mt-1">System will never sell below cost + this markup %.</p>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4">
+        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm">Add Product</button>
+        <button type="button" onclick="document.getElementById('add-product-modal').classList.add('hidden')"
+                class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-lg text-sm">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Map Client Modal -->
+<div id="map-client-modal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Map Client to Catalogue</h3>
+    <form method="POST" action="{{ url_for('catalogue.map_client', cat_id=cat.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Select Client *</label>
+        <select name="client_id" required
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+          <option value="">Select Client</option>
+          {% for c in all_clients %}
+          <option value="{{ c.id }}">{{ c.name }} ({{ c.client_code }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex gap-3">
+        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm">Map Client</button>
+        <button type="button" onclick="document.getElementById('map-client-modal').classList.add('hidden')"
+                class="flex-1 bg-gray-100 text-gray-700 font-medium py-2.5 rounded-lg text-sm">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

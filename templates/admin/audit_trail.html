@@ -1,0 +1,75 @@
+{% extends "base_admin.html" %}
+{% block title %}Audit Trail{% endblock %}
+{% block page_title %}Audit Trail{% endblock %}
+{% block content %}
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-4 p-4">
+  <form method="GET" class="flex flex-wrap gap-3 items-end">
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">Module</label>
+      <select name="module" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+        <option value="">All Modules</option>
+        {% for m in ['auth','clients','suppliers','products','brands','countries','currencies','denominations','catalogue','orders','inventory','users','funds'] %}
+        <option value="{{ m }}" {% if filters.module==m %}selected{% endif %}>{{ m|title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">From Date</label>
+      <input type="date" name="date_from" value="{{ filters.date_from or '' }}"
+             class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">To Date</label>
+      <input type="date" name="date_to" value="{{ filters.date_to or '' }}"
+             class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
+    </div>
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg">Search</button>
+    <a href="{{ url_for('users.audit_trail') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg">Reset</a>
+  </form>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+  <table class="w-full text-sm whitespace-nowrap">
+    <thead><tr class="bg-gray-50 border-b border-gray-200">
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timestamp</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Module</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Record ID</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP Address</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Changes</th>
+    </tr></thead>
+    <tbody>
+      {% for log in logs %}
+      <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+        <td class="px-5 py-3 text-xs text-gray-500 font-mono">{{ log.created_at[:19] }}</td>
+        <td class="px-5 py-3 text-gray-700 text-sm">
+          <span class="font-medium">{{ log.user_email or "System" }}</span>
+        </td>
+        <td class="px-5 py-3">
+          <span class="px-2 py-0.5 rounded-full text-xs font-medium
+            {% if log.action in ['add','create'] %}bg-green-100 text-green-700
+            {% elif log.action in ['edit','update','save'] %}bg-blue-100 text-blue-700
+            {% elif log.action in ['delete','cancel','disable'] %}bg-red-100 text-red-700
+            {% elif log.action in ['login_success','login_failed'] %}bg-purple-100 text-purple-700
+            {% else %}bg-gray-100 text-gray-600{% endif %}">
+            {{ log.action|replace('_',' ')|title }}
+          </span>
+        </td>
+        <td class="px-5 py-3 text-gray-600 capitalize">{{ log.module }}</td>
+        <td class="px-5 py-3 text-gray-500 font-mono text-xs">{{ log.record_id or "—" }}</td>
+        <td class="px-5 py-3 text-gray-400 text-xs font-mono">{{ log.ip_address or "—" }}</td>
+        <td class="px-5 py-3 text-gray-400 text-xs max-w-xs truncate">
+          {% if log.new_value %}
+          <span class="text-gray-600">{{ log.new_value[:80] }}</span>
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="px-5 py-10 text-center text-gray-400">No audit logs found for the selected filters.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<p class="text-gray-400 text-xs mt-2 text-right">Showing up to 500 most recent records.</p>
+{% endblock %}

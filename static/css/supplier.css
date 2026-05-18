@@ -1,0 +1,16 @@
+/* Supplier Portal - Custom styles */
+
+/* Upload zone drag-drop */
+.upload-zone { border: 2px dashed #cbd5e1; border-radius: 12px; transition: border-color 0.2s, background 0.2s; }
+.upload-zone:hover, .upload-zone.drag-over { border-color: #3b82f6; background: #eff6ff; }
+
+/* Inventory stock indicator */
+.stock-bar { height: 4px; border-radius: 2px; background: #e2e8f0; overflow: hidden; }
+.stock-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+.stock-bar-fill.high { background: #22c55e; }
+.stock-bar-fill.medium { background: #f59e0b; }
+.stock-bar-fill.low { background: #ef4444; }
+
+/* Code list monospace */
+.code-list { font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.8; }
+.code-row:hover { background: #f1f5f9; }

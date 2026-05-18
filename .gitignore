@@ -1,0 +1,28 @@
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python Cache & Compiled Files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database Files
+*.db
+database/*.db
+
+# Session & Media Uploads
+flask_session/
+static/uploads/
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db

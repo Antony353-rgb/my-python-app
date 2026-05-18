@@ -1,0 +1,120 @@
+{% extends "base_admin.html" %}
+{% block title %}Supplier Rates{% endblock %}
+{% block page_title %}Supplier Rate List{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <p class="text-gray-500 text-sm">Manage contracted supplier rates for each product and denomination.</p>
+  <button onclick="document.getElementById('modal').classList.remove('hidden')"
+          class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+    <i class="fa fa-plus"></i> Add Rate
+  </button>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+  <table class="w-full text-sm whitespace-nowrap">
+    <thead><tr class="bg-gray-50 border-b border-gray-200">
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Brand</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Country</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Denomination</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rate Type</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rate Value</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Effective</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+      <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+    </tr></thead>
+    <tbody>
+      {% if rates is defined %}
+      {% for r in rates %}
+      <tr class="border-b border-gray-50 hover:bg-gray-50">
+        <td class="px-5 py-3 font-medium text-gray-800">{{ r.supplier_name }}</td>
+        <td class="px-5 py-3 text-gray-700">{{ r.brand_name }}</td>
+        <td class="px-5 py-3 text-gray-700">{{ r.product_name }}</td>
+        <td class="px-5 py-3 text-gray-600">{{ r.country_name }}</td>
+        <td class="px-5 py-3 text-gray-600">{{ r.denomination_label }}</td>
+        <td class="px-5 py-3">
+          <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">
+            {{ r.rate_type|replace('_pct','%')|replace('_amt',' amt')|replace('_',' ')|title }}
+          </span>
+        </td>
+        <td class="px-5 py-3 font-medium text-gray-800">{{ r.rate_value }}</td>
+        <td class="px-5 py-3 text-gray-500 text-xs">{{ r.effective_date or "—" }}</td>
+        <td class="px-5 py-3">
+          <span class="px-2 py-0.5 rounded-full text-xs {% if r.is_active %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-500{% endif %}">
+            {{ "Active" if r.is_active else "Disabled" }}
+          </span>
+        </td>
+        <td class="px-5 py-3">
+          <a href="/admin/masters/supplier-rates/toggle/{{ r.id }}" class="text-amber-600 text-xs hover:underline">Toggle</a>
+        </td>
+      </tr>
+      {% endfor %}
+      {% else %}
+      <tr><td colspan="10" class="px-5 py-10 text-center text-gray-400">No supplier rates defined yet.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Add Rate Modal -->
+<div id="modal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Add Supplier Rate</h3>
+    <form method="POST" action="/admin/masters/supplier-rates/save">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div class="col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Supplier *</label>
+          <select name="supplier_id" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Select</option>
+            {% if suppliers is defined %}{% for s in suppliers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}{% endif %}
+          </select>
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Product *</label>
+          <select name="product_id" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Select Product</option>
+            {% if products is defined %}{% for p in products %}<option value="{{ p.id }}" data-brand="{{ p.brand_id }}" data-country="{{ p.country_id }}">{{ p.brand_name }} — {{ p.name }}</option>{% endfor %}{% endif %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Denomination *</label>
+          <select name="denomination_id" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Select</option>
+            {% if denominations is defined %}{% for d in denominations %}<option value="{{ d.id }}">{{ d.label }}</option>{% endfor %}{% endif %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Effective Date</label>
+          <input type="date" name="effective_date" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Rate Type *</label>
+          <select name="rate_type" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="discount_pct">Discount %</option>
+            <option value="markup_pct">Markup %</option>
+            <option value="discount_amt">Discount Amount</option>
+            <option value="markup_amt">Markup Amount</option>
+            <option value="fixed">Fixed Price</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Rate Value *</label>
+          <input type="number" name="rate_value" required step="0.01" placeholder="e.g. 10"
+                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Cost Price (base price before rate)</label>
+          <input type="number" name="cost_price" step="0.01" placeholder="e.g. 490 for a 500 denomination voucher"
+                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-2">
+        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm">Save Rate</button>
+        <button type="button" onclick="document.getElementById('modal').classList.add('hidden')" class="flex-1 bg-gray-100 text-gray-700 font-medium py-2.5 rounded-lg text-sm">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

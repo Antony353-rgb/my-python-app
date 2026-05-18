@@ -1,0 +1,118 @@
+{% extends "base_client.html" %}
+{% block title %}Search Results{% endblock %}
+{% block page_title %}Search Results{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+  <div class="text-sm text-gray-500">
+    Showing in <span class="font-semibold text-gray-800">{{ currency.code }}</span>
+    &nbsp;·&nbsp; Balance:
+    <span class="font-semibold {% if balance > 0 %}text-green-700{% else %}text-red-600{% endif %}">
+      {{ currency.symbol }}{{ "%.2f"|format(balance) }}
+    </span>
+  </div>
+  <a href="{{ url_for('client.search') }}" class="text-blue-600 text-sm hover:underline">&#8592; New Search</a>
+</div>
+
+{% if results %}
+<div id="results-container" class="space-y-3">
+  {% for r in results %}
+  <div class="product-card bg-white rounded-xl border border-gray-200 shadow-sm p-5"
+       data-price="{{ r.selling_price or 0 }}">
+    <div class="flex items-start justify-between gap-4">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap mb-1">
+          <span class="font-semibold text-gray-800">{{ r.brand_name }}</span>
+          <span class="text-gray-400 text-sm">·</span>
+          <span class="text-gray-600 text-sm">{{ r.country_name }}</span>
+          <span class="px-2 py-0.5 rounded-full text-xs font-medium
+            {% if r.in_stock %}bg-green-100 text-green-700{% else %}bg-amber-100 text-amber-700{% endif %}">
+            {% if r.in_stock %}{{ r.stock_count }} in stock{% else %}Pre-order{% endif %}
+          </span>
+        </div>
+        <p class="text-gray-700 text-sm font-medium">{{ r.product_name }}</p>
+        <p class="text-gray-400 text-xs mt-0.5">
+          {{ r.denomination_label }}
+          {% if r.validity_days %}&nbsp;·&nbsp;Valid {{ r.validity_days }} days{% endif %}
+        </p>
+      </div>
+      {% if r.selling_price %}
+      <div class="text-right shrink-0">
+        <p class="unit-price text-2xl font-bold text-gray-800" data-price="{{ r.selling_price }}">
+          {{ currency.symbol }}{{ "%.2f"|format(r.selling_price) }}
+        </p>
+        <p class="text-xs text-gray-400">per voucher</p>
+      </div>
+      {% else %}
+      <p class="text-gray-400 text-sm shrink-0">No rate available</p>
+      {% endif %}
+    </div>
+
+    {% if r.selling_price and r.supplier_id %}
+    <div class="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-3">
+      <form method="POST" action="{{ url_for('client.cart_add') }}" class="flex items-center gap-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <input type="hidden" name="product_id" value="{{ r.product_id }}"/>
+        <input type="hidden" name="denomination_id" value="{{ r.denomination_id }}"/>
+        <input type="hidden" name="supplier_id" value="{{ r.supplier_id }}"/>
+        <input type="hidden" name="supplier_rate_id" value="{{ r.supplier_rate_id }}"/>
+        <input type="hidden" name="cost_price" value="{{ r.cost_price }}"/>
+        <input type="hidden" name="selling_price" value="{{ r.selling_price }}"/>
+        <input type="hidden" name="currency_id" value="{{ r.currency_id }}"/>
+        <input type="hidden" name="currency_code" value="{{ r.currency_code }}"/>
+        <input type="hidden" name="product_name" value="{{ r.product_name }}"/>
+        <input type="hidden" name="denomination_label" value="{{ r.denomination_label }}"/>
+        <input type="hidden" name="order_type" value="{% if r.in_stock %}api{% else %}preorder{% endif %}"/>
+        <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+          <label class="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-r border-gray-200">Qty</label>
+          <input type="number" name="qty" value="1" min="1"
+                 {% if r.in_stock %}max="{{ r.stock_count }}"{% endif %}
+                 class="qty-input w-16 px-2 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        </div>
+        <button type="submit"
+                class="bg-gray-800 hover:bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+          Add to Cart
+        </button>
+      </form>
+
+      <form method="POST" action="{{ url_for('client.cart_add') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <input type="hidden" name="product_id" value="{{ r.product_id }}"/>
+        <input type="hidden" name="denomination_id" value="{{ r.denomination_id }}"/>
+        <input type="hidden" name="supplier_id" value="{{ r.supplier_id }}"/>
+        <input type="hidden" name="supplier_rate_id" value="{{ r.supplier_rate_id }}"/>
+        <input type="hidden" name="cost_price" value="{{ r.cost_price }}"/>
+        <input type="hidden" name="selling_price" value="{{ r.selling_price }}"/>
+        <input type="hidden" name="currency_id" value="{{ r.currency_id }}"/>
+        <input type="hidden" name="currency_code" value="{{ r.currency_code }}"/>
+        <input type="hidden" name="product_name" value="{{ r.product_name }}"/>
+        <input type="hidden" name="denomination_label" value="{{ r.denomination_label }}"/>
+        <input type="hidden" name="order_type" value="{% if r.in_stock %}api{% else %}preorder{% endif %}"/>
+        <input type="hidden" name="qty" value="1"/>
+        <button type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+          Buy Now
+        </button>
+      </form>
+
+      <span class="total-price text-sm text-gray-500 ml-auto"></span>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center">
+  <i class="fa fa-magnifying-glass text-4xl text-gray-300 mb-3"></i>
+  <p class="text-gray-500 font-medium">No vouchers found</p>
+  <p class="text-gray-400 text-sm mt-1">Try a different brand, country or currency.</p>
+  <a href="{{ url_for('client.search') }}"
+     class="inline-block mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-colors">
+    Back to Search
+  </a>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/shared/utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/client/search.js') }}"></script>
+{% endblock %}

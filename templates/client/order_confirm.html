@@ -1,0 +1,37 @@
+{% extends "base_client.html" %}
+{% block title %}Order Confirmed{% endblock %}
+{% block page_title %}Order Confirmed{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto text-center py-12">
+  <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+    <i class="fa fa-circle-check text-green-600 text-4xl"></i>
+  </div>
+  <h2 class="text-2xl font-bold text-gray-800 mb-2">Order Placed Successfully!</h2>
+  <p class="text-gray-500 mb-2">Your order has been received and is being processed.</p>
+  <p class="text-gray-400 text-sm mb-8">You will be notified when your voucher codes are ready.</p>
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 text-left mb-6">
+    <div class="flex justify-between text-sm mb-2">
+      <span class="text-gray-500">Order Number</span>
+      <span class="font-mono font-medium text-gray-800">{{ order.order_number }}</span>
+    </div>
+    <div class="flex justify-between text-sm mb-2">
+      <span class="text-gray-500">Amount</span>
+      <span class="font-bold text-gray-800">{{ order.total_amount }} {{ order.currency_code }}</span>
+    </div>
+    <div class="flex justify-between text-sm">
+      <span class="text-gray-500">Status</span>
+      <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">Processing</span>
+    </div>
+  </div>
+  <div class="flex gap-3">
+    <a href="{{ url_for('client_orders.order_detail', order_id=order.id) }}"
+       class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors text-sm text-center">
+      View Order
+    </a>
+    <a href="{{ url_for('client.search') }}"
+       class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-lg transition-colors text-sm text-center">
+      Search More
+    </a>
+  </div>
+</div>
+{% endblock %}

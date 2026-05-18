@@ -1,0 +1,22 @@
+{% extends "base_client.html" %}
+{% block title %}Price List{% endblock %}
+{% block page_title %}Download Price List{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto">
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <i class="fa fa-file-excel text-green-600 text-2xl"></i>
+    </div>
+    <h3 class="font-semibold text-gray-800 text-lg mb-2">Your Price List</h3>
+    <p class="text-gray-500 text-sm mb-6">
+      Download your current catalogue with all mapped products and pricing.
+      This reflects the current active prices.
+    </p>
+    <a href="{{ url_for('client.catalogue_download') }}"
+       class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-lg transition-colors text-sm">
+      <i class="fa fa-download"></i> Download Excel (.xlsx)
+    </a>
+    <p class="text-gray-400 text-xs mt-4">File includes: Brand, Country, Product, Denomination, Currency, Rate Type, Rate Value</p>
+  </div>
+</div>
+{% endblock %}

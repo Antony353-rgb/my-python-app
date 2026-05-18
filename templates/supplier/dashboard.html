@@ -1,0 +1,80 @@
+{% extends "base_supplier.html" %}
+{% block title %}Supplier Dashboard{% endblock %}
+{% block page_title %}Supplier Dashboard{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+    <p class="text-gray-500 text-xs font-medium uppercase tracking-wide">Available Stock</p>
+    <p class="text-3xl font-bold text-gray-800 mt-1">{{ stats.available_codes }}</p>
+    <p class="text-gray-400 text-xs mt-1">voucher codes ready to sell</p>
+    <a href="{{ url_for('supplier.inventory') }}" class="text-blue-600 text-xs hover:underline mt-2 inline-block">View Inventory &rarr;</a>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+    <p class="text-gray-500 text-xs font-medium uppercase tracking-wide">Total Sold</p>
+    <p class="text-3xl font-bold text-green-600 mt-1">{{ stats.sold_codes }}</p>
+    <p class="text-gray-400 text-xs mt-1">codes delivered</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+    <p class="text-gray-500 text-xs font-medium uppercase tracking-wide">Pending Deliveries</p>
+    <p class="text-3xl font-bold text-amber-600 mt-1">{{ stats.pending_deliveries }}</p>
+    <p class="text-gray-400 text-xs mt-1">orders awaiting fulfillment</p>
+    {% if stats.pending_deliveries > 0 %}
+    <a href="{{ url_for('supplier.orders') }}" class="text-amber-600 text-xs hover:underline mt-2 inline-block">View Orders &rarr;</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h3 class="font-semibold text-gray-700 text-sm">Recent Orders</h3>
+      <a href="{{ url_for('supplier.orders') }}" class="text-blue-600 text-xs hover:underline">View All</a>
+    </div>
+    <table class="w-full text-sm">
+      <thead><tr class="border-b border-gray-100">
+        <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order #</th>
+        <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+        <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
+        <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+      </tr></thead>
+      <tbody>
+        {% for o in recent_orders %}
+        <tr class="border-b border-gray-50 hover:bg-gray-50">
+          <td class="px-5 py-3 font-mono text-xs text-gray-600">{{ o.order_number }}</td>
+          <td class="px-5 py-3 text-gray-700 truncate max-w-[150px]">{{ o.product_name }}</td>
+          <td class="px-5 py-3 font-medium text-gray-800">{{ o.qty }}</td>
+          <td class="px-5 py-3">
+            <span class="px-2 py-0.5 rounded-full text-xs
+              {% if o.status=='delivered' %}bg-green-100 text-green-700
+              {% elif o.status=='ordered' %}bg-blue-100 text-blue-700
+              {% else %}bg-amber-100 text-amber-700{% endif %}">
+              {{ o.status|title }}
+            </span>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="px-5 py-6 text-center text-gray-400 text-sm">No recent orders.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+    <h3 class="font-semibold text-gray-700 text-sm mb-4">Quick Actions</h3>
+    <div class="space-y-2">
+      <a href="{{ url_for('supplier_inv.upload') }}"
+         class="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium transition-colors">
+        <i class="fa fa-upload w-4 text-center"></i> Upload Voucher Codes
+      </a>
+      <a href="{{ url_for('supplier.inventory') }}"
+         class="flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
+        <i class="fa fa-warehouse w-4 text-center"></i> View My Inventory
+      </a>
+      <a href="{{ url_for('supplier.orders') }}"
+         class="flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors">
+        <i class="fa fa-clipboard-list w-4 text-center"></i> View Orders
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
