@@ -12,7 +12,19 @@ def create_app():
 
     csrf.init_app(app)
 
-    os.makedirs("flask_session", exist_ok=True)
+    import os
+    is_vercel = os.environ.get("VERCEL")
+
+    session_dir = "/tmp/flask_session" if is_vercel else "flask_session"
+    os.makedirs(session_dir, exist_ok=True)
+    app.config['SESSION_FILE_DIR'] = session_dir
+
+    # Vercel-க்காக Upload ஃபோல்டர்களையும் /tmp க்கு மாற்றுதல்
+    if is_vercel:
+        Config.UPLOAD_FOLDER = "/tmp/uploads"
+        Config.VOUCHER_UPLOAD_FOLDER = "/tmp/vouchers"
+        Config.INVENTORY_UPLOAD_FOLDER = "/tmp/inventory"
+
     os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
     os.makedirs(Config.VOUCHER_UPLOAD_FOLDER, exist_ok=True)
     os.makedirs(Config.INVENTORY_UPLOAD_FOLDER, exist_ok=True)
