@@ -17,6 +17,8 @@ def dashboard():
         "today_revenue": query_db("SELECT SUM(total_amount) as s FROM orders WHERE DATE(created_at)=DATE('now') AND status!='cancelled'", one=True)["s"] or 0,
         "available_vouchers": query_db("SELECT COUNT(*) as c FROM voucher_codes WHERE status='available'", one=True)["c"],
         "total_profit": query_db("SELECT SUM(profit) as s FROM order_items WHERE status='delivered'", one=True)["s"] or 0,
+        "monthly_revenue": query_db("SELECT SUM(total_amount) as s FROM orders WHERE strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now') AND status != 'cancelled'", one=True)["s"] or 0,
+        "monthly_orders_finished": query_db("SELECT COUNT(*) as c FROM orders WHERE strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now') AND status = 'delivered'", one=True)["c"],
     }
     recent_orders = query_db("""
         SELECT o.*, c.name as client_name, cu.code as currency_code

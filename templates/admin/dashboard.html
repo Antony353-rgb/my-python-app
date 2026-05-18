@@ -6,11 +6,12 @@
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
   {% set cards = [
     ("Total Clients", stats.total_clients, "fa-building", "blue"),
-    ("Total Suppliers", stats.total_suppliers, "fa-truck", "violet"),
     ("Today Orders", stats.today_orders, "fa-clipboard-list", "green"),
     ("Pending Orders", stats.pending_orders, "fa-clock", "amber"),
     ("Today Revenue", "%.2f"|format(stats.today_revenue), "fa-circle-dollar", "emerald"),
-    ("Total Profit", "%.2f"|format(stats.total_profit), "fa-arrow-trend-up", "teal"),
+    ("Monthly Revenue", "%.2f"|format(stats.monthly_revenue), "fa-calendar-days", "teal"),
+    ("Monthly Orders Finished", stats.monthly_orders_finished, "fa-circle-check", "sky"),
+    ("Total Profit", "%.2f"|format(stats.total_profit), "fa-arrow-trend-up", "emerald"),
     ("Total Orders", stats.total_orders, "fa-receipt", "indigo"),
     ("Available Vouchers", stats.available_vouchers, "fa-ticket", "pink")
   ] %}

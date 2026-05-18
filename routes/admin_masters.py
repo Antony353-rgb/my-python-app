@@ -236,6 +236,24 @@ def product_toggle(id):
     flash("Product status updated.", "success")
     return redirect(url_for("masters.products"))
 
+@masters_bp.route("/products/delete/<int:id>")
+@login_required
+@role_required("superadmin", "internal")
+def product_delete(id):
+    prod = query_db("SELECT * FROM products WHERE id=?", (id,), one=True)
+    if prod:
+        execute_db("DELETE FROM catalogue_products WHERE product_id=?", (id,))
+        execute_db("DELETE FROM supplier_rates WHERE product_id=?", (id,))
+        execute_db("DELETE FROM voucher_codes WHERE product_id=?", (id,))
+        execute_db("DELETE FROM order_items WHERE product_id=?", (id,))
+        execute_db("DELETE FROM inventory_orders WHERE product_id=?", (id,))
+        execute_db("DELETE FROM products WHERE id=?", (id,))
+        log_action("delete", "products", id, dict(prod), None)
+        flash(f"Product '{prod['name']}' has been permanently deleted.", "success")
+    else:
+        flash("Product not found.", "danger")
+    return redirect(url_for("masters.products"))
+
 # ─── SUPPLIER ──────────────────────────────────────
 @masters_bp.route("/suppliers")
 @login_required

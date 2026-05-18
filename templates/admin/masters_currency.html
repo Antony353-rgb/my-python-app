@@ -2,8 +2,14 @@
 {% block title %}Currencies{% endblock %}
 {% block page_title %}Currency Master{% endblock %}
 {% block content %}
-<div class="flex items-center justify-between mb-4">
-  <p class="text-gray-500 text-sm">Manage currencies used across the platform.</p>
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+  <div class="relative w-full max-w-xs">
+    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+      <i class="fa fa-search text-gray-400"></i>
+    </span>
+    <input type="text" id="searchInput" oninput="filterTable()" placeholder="Search currencies by name..."
+           class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"/>
+  </div>
   <button onclick="document.getElementById('modal').classList.remove('hidden')"
           class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
     <i class="fa fa-plus"></i> Add Currency
@@ -65,6 +71,22 @@ function editRow(id, name, code, symbol) {
   document.getElementById('edit-symbol').value = symbol;
   document.getElementById('modal-title').textContent = 'Edit Currency';
   document.getElementById('modal').classList.remove('hidden');
+}
+
+function filterTable() {
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  const rows = document.querySelectorAll('tbody tr');
+  rows.forEach(row => {
+    const nameCell = row.cells[0];
+    if (nameCell) {
+      const name = nameCell.textContent.toLowerCase();
+      if (name.includes(query)) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    }
+  });
 }
 </script>
 {% endblock %}
